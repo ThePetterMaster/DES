@@ -104,24 +104,49 @@ def permute(block, table):
 
 def sbox(input, sbox):
     """
-    Aplica a substituição S-box.
+    Aplica a substituição S-Box a um grupo de 6 bits.
+    
+    Parâmetros:
+    - input: Grupo de 6 bits a ser transformado.
+    - sbox: A S-Box a ser usada para a transformação.
+    
+    Retorna:
+    - Lista de 4 bits resultantes da transformação.
     """
+    # Determina a linha da S-Box usando o primeiro e último bit de entrada
     row = int(f"{input[0]}{input[5]}", 2)
+    # Determina a coluna da S-Box usando os 4 bits do meio
     col = int(''.join([str(x) for x in input[1:5]]), 2)
+    # Obtém o valor da S-Box correspondente à linha e coluna
     return [int(x) for x in f"{sbox[row][col]:04b}"]
 
 def feistel(right, key):
     """
     Função Feistel: expansão, XOR, substituição e permutação.
+    
+    Parâmetros:
+    - right: Metade direita do bloco (32 bits).
+    - key: Subchave para a rodada atual (48 bits).
+    
+    Retorna:
+    - A saída permutada de 32 bits após as operações Feistel.
     """
+    # Expansão: A metade direita (32 bits) é expandida para 48 bits
     expanded = permute(right, E)
+    
+    # XOR: A metade direita expandida é XORed com a subchave de 48 bits
     xor_result = [expanded[i] ^ key[i] for i in range(48)]
+    
+    # Substituição (S-Boxes): Divide o resultado do XOR em 8 grupos de 6 bits
     sbox_result = []
     for i in range(8):
-        sbox_input = xor_result[i*6:(i+1)*6]
+        sbox_input = xor_result[i * 6:(i + 1) * 6]
         sbox_output = sbox(sbox_input, S[i])
         sbox_result.extend(sbox_output)
+    
+    # Permutação: Permuta os 32 bits de saída das S-Boxes
     return permute(sbox_result, P)
+
 
 def des_encrypt_block(block, keys):
     """
